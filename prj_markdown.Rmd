@@ -375,8 +375,14 @@ citrus.plotHierarchicalClusterFeatureGroups(outputFile="./output/testfeat.pdf",
                                               layout=hierarchyGraph$layout,
                                               plotSize=hierarchyGraph$plotSize)
 ```
+##Model Construction:
+When the two sample groups are inspected to identify cluster features that differ among them, each of the sample involved is assigned 
+to one of the two or more sample groups (e.g. stimulated and unstimulated). Following this, regularized classification models are constructed. This is done using the calculated cluster features that act as the regressors/independent variables of the sample groups. However, it is important to realize that not all of the calculate cluster features will be useful in differentiating sample groups. Therefore, only a subset of the features is used, and the models are generated using the nearest shrunken centroid (pamr) and lasso-regularized logistic regression (glmnet) methods. Both of these methods build a series of predictive models by using the selected subsets of supplied regressors. To limit the number of the features in any given model, a regularization threshold is used. Since, we do not know which subset of cluster feature can best stratify the sample group, a set of models are built using a range of regularization thresholds. To select one from this set of models, cross validation is performed on all the models and the best is selected that meets the constraints specified by the user. 
+When it is required to identify cluster features that are predictive of the survival times of the sample, these are specified by the user. This is followed by the construction of many lasso-regularized cox proportional-hazards models, wherein provided cluster features act as regressors of the sample survival time. Here as well, the number of features included in a model is restricted by regularization threshold. As it is unknown, which subset acts as a best predictor, a set of models are built using a range of regularization threshold, which are evaluated using K-fold cross validation. The regularization threshold that produces the model with the best total goodness of fit is used to constrain the final model.
 
-#calculate regularization thresholds
+##Calculation of Regularization Thresholds
+This function generates a range of regularization thresholds for further model construction. It is in a vector form.
+
 ```{r eval=FALSE, echo=FALSE}
 regularizationThresholds = citrus.generateRegularizationThresholds(medianFeatures,
                                                                     labels,
@@ -384,7 +390,13 @@ regularizationThresholds = citrus.generateRegularizationThresholds(medianFeature
                                                                     family="classification")
 ```
 
-#calculate cv error rates
+Results Assessment and Selection of a final regularization threshold:
+The quality of results can be assessed using model error rate plots. If a constructed model has a lower estimated error rate, this means that the model under investigation has identified some subset of cluster features which are robust predictors of a sample’s class. These identified features in turn depict a behavior that is unique to that class, and are hence, stratifying subsets of interests. On the other hand, a model with a high error rate has features that do not differ between sample classes and hence are not useful stratifying features. Thus, interpretation should be done only from models having an acceptable error rate. 
+When such models with accepted error rates have been constructed, a regularization threshold must be chosen that will be used to constrain the final model constructed from all the sample features. The aim is to obtain the smallest but most informative subset of features that differ between classes. This is done by selecting a threshold that results in a simplest model with an acceptable error rate. The same is true when seeking to identify many or all the features that differ between sample groups. The difference being, the model will be of complex nature and would include a regularization constraint. 
+
+##Calculation of Cross Validation Error Rates
+This function calculates model error rates at different regularization thresholds. It is a matrix of model error rates, standard error of error estimates and FDRs at supplied thresholds.
+
 ```{r eval=FALSE, echo=FALSE}
 thresholdCVRates = citrus.thresholdCVs.quick("pamr",
                                              medianFeatures,
@@ -393,91 +405,91 @@ thresholdCVRates = citrus.thresholdCVs.quick("pamr",
                                              family="classification")
 ```
 
-#calculate cvminima
+##Calculation of Cross Validation Minima
+This function provides regularization threshold of pre-selected cross validation points and their indices.
+
 ```{r eval=FALSE, echo=FALSE}
 cvMinima = citrus.getCVMinima("pamr",thresholdCVRates, fdrRate = 0.01)
 ```
 
-#Build final model
+##Building of Final Model
+This function constructs an endpoint model using features calculated by citrus.
+
 ```{r eval=FALSE, echo=FALSE}
 finalModel = citrus.buildEndpointModel(medianFeatures,
                                         labels, 
                                         family="classification",
                                         type="pamr",
                                         regularizationThresholds)
-
-#endpointModel = citrus.buildEndpointModel(abundanceFeatures,labels)
 ```
 
-#Extracting Model Features.
+##Extracting Model Features.
+This function reports model features ar pre-specific thresholds. For predictive models, it gives non-zero model features at specified regularization thresholds. And, for FDR-constrained models, it reports features which are below the specified FDRs.
+
 ```{r eval=FALSE, echo=FALSE}
 modelfeatures = citrus.extractModelFeatures(cvMinima,finalModel,
                                             medianFeatures)
 ```
-#Constructing Figures
+
+Interpretation of Results:
+Nonzero features of the final model, which is determined by the regularization thresholds, are the set of features that best differentiate sample groups. The values of these relevant features for each sample are shown in box plots. Equally important as the identified stratifying features are the phenotypes of corresponding clusters. To determine these phenotypes, densities plots or scatter plots of lineage markers in cluster cells are drawn, along with the plots of same markers in other cells. This allows for a comparative analysis as to how much each marker is enriched in cluster cells. Related stratifying subsets that have similar behavior may be identified by highlighting relevant subsets in plots of the clustering hierarchy.
+
+##Constructing Figures
 ```{r}
 par(mar=c(5,4,4,6)+0.1)
-plot(thresholdCVRates$cvm, 
+
+plot(thresholdCVRates$cvm,
      pch=c(1,NA,NA,NA,NA,NA,NA),
      axes=FALSE,
      ylim = c(0,0.6), 
      xlab="",ylab="",
      type='o',col="red")
 axis(2, col="red", las = 1)
-mtext("Cross Validation Rate",side=2,line=2.5)
+mtext("Cross Validation Rate",side=2,line=2.5, col='red')
 box()
 
 par(new=TRUE)
 
-plot(thresholdCVRates$fdr, 
+plot(thresholdCVRates$fdr,
      pch=c(1,NA,NA,NA,NA,NA,NA),
      axes=FALSE, 
      ylim = c(0,0.6), 
      xlab="",ylab="",
      type='o',col="blue")
 axis(4, col="blue", las = 1)
-mtext("FDRate",side=4,line=4)
+mtext("FDRate",side=4,line=4, col='blue')
 box()
+
 #arrows(78, thresholdCVRates$fdr[78], 78, thresholdCVRates$fdr[78] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
 #arrows(85, thresholdCVRates$fdr[85], 85, thresholdCVRates$fdr[85] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
-arrows(92, thresholdCVRates$fdr[92], 92, thresholdCVRates$fdr[92] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
-arrows(99, thresholdCVRates$fdr[99], 99, thresholdCVRates$fdr[99] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
+#arrows(92, thresholdCVRates$fdr[92], 92, thresholdCVRates$fdr[92] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
+#arrows(99, thresholdCVRates$fdr[99], 99, thresholdCVRates$fdr[99] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
 
 
-#par(new=TRUE)
+par(new=TRUE)
 
 axis(1, at=c(0,20,40,60,80,100),labels=c(10,8,6,4,2,0))
-#axis(1,range(pretty(regularizationThresholds),100))
 mtext("Regularization Threshold", side=1, col="green",line=2.5)
 
-
-#axis(3, pretty(range(finalModel$model$nonzero),200))
 axis(3, at=c(1:100),labels=finalModel$model$nonzero)
 mtext("Number of Features", side=3, col="magenta",line=2.5)
-#text(314,labels="Cutoff")
-abline(v=88, col="orange", lty=2)
 
+abline(v=<cvminimaindexvalue>, col="orange", lty=2)
 
-#par(new=TRUE)
-#plot(cvMinima$cv.min, 
-#     axes=FALSE,
-#     xlab="",ylab="",
-#     col="green")
+#Plotting cvmin
 
-#par(new=TRUE)
-
-#plot(cvMinima$cv.1se, 
-#     axes=FALSE,
-#     xlab="",ylab=""
-#     , pch=7)
-
-#text(2,labels="x",plot=2)
+par(new=TRUE)
+points(<cvminimaindexvalue>, thresholdCVRates$cvm[<cvminimaindexvalue>],
+     axes=FALSE,
+     xlab="",ylab="",
+     col="green")
 ```
 
 ```{r}
 ```
-```{r}
-```
+
 ```{r}
 ```
 
+```{r}
+```
