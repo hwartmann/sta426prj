@@ -390,7 +390,7 @@ regularizationThresholds = citrus.generateRegularizationThresholds(medianFeature
                                                                     family="classification")
 ```
 
-Results Assessment and Selection of a final regularization threshold:
+##Results Assessment and Selection of a final regularization threshold:
 The quality of results can be assessed using model error rate plots. If a constructed model has a lower estimated error rate, this means that the model under investigation has identified some subset of cluster features which are robust predictors of a sample’s class. These identified features in turn depict a behavior that is unique to that class, and are hence, stratifying subsets of interests. On the other hand, a model with a high error rate has features that do not differ between sample classes and hence are not useful stratifying features. Thus, interpretation should be done only from models having an acceptable error rate. 
 When such models with accepted error rates have been constructed, a regularization threshold must be chosen that will be used to constrain the final model constructed from all the sample features. The aim is to obtain the smallest but most informative subset of features that differ between classes. This is done by selecting a threshold that results in a simplest model with an acceptable error rate. The same is true when seeking to identify many or all the features that differ between sample groups. The difference being, the model will be of complex nature and would include a regularization constraint. 
 
@@ -431,7 +431,7 @@ modelfeatures = citrus.extractModelFeatures(cvMinima,finalModel,
                                             medianFeatures)
 ```
 
-Interpretation of Results:
+##Interpretation of Results:
 Nonzero features of the final model, which is determined by the regularization thresholds, are the set of features that best differentiate sample groups. The values of these relevant features for each sample are shown in box plots. Equally important as the identified stratifying features are the phenotypes of corresponding clusters. To determine these phenotypes, densities plots or scatter plots of lineage markers in cluster cells are drawn, along with the plots of same markers in other cells. This allows for a comparative analysis as to how much each marker is enriched in cluster cells. Related stratifying subsets that have similar behavior may be identified by highlighting relevant subsets in plots of the clustering hierarchy.
 
 ##Constructing Figures
