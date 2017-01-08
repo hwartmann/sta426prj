@@ -474,12 +474,12 @@ mtext("Regularization Threshold", side=1, col="green",line=2.5)
 axis(3, at=c(1:100),labels=finalModel$model$nonzero)
 mtext("Number of Features", side=3, col="magenta",line=2.5)
 
-abline(v=<cvminimaindexvalue>, col="orange", lty=2)
+abline(v=cvMinima$cv.min.index, col="orange", lty=2)
 
 #Plotting cvmin
 
 par(new=TRUE)
-points(<cvminimaindexvalue>, thresholdCVRates$cvm[<cvminimaindexvalue>],
+points(cvMinima$cv.min.index, thresholdCVRates$cvm[cvMinima$cv.min.index],
      axes=FALSE,
      xlab="",ylab="",
      col="green")
