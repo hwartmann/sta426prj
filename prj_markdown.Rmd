@@ -29,6 +29,9 @@ capbox = figs("box")
 figs("hiplot","add some text here")
 hiplot = figs("hiplot")
 
+figs("img","Estimated Model Error Rate")
+capimg = figs("img")
+
 
 tbls("dataspread","Each files was downsampled with 5000 samples for 1000 times. Each time the mean marker intensity for the extracellular markers was calculated. Here we show the mean of 1000 means ± s.d.. Patient 1 has s.d. zero because the files contain less than 5000 events.")
 capdataspread = tbls("dataspread")
@@ -435,7 +438,7 @@ modelfeatures = citrus.extractModelFeatures(cvMinima,finalModel,
 Nonzero features of the final model, which is determined by the regularization thresholds, are the set of features that best differentiate sample groups. The values of these relevant features for each sample are shown in box plots. Equally important as the identified stratifying features are the phenotypes of corresponding clusters. To determine these phenotypes, densities plots or scatter plots of lineage markers in cluster cells are drawn, along with the plots of same markers in other cells. This allows for a comparative analysis as to how much each marker is enriched in cluster cells. Related stratifying subsets that have similar behavior may be identified by highlighting relevant subsets in plots of the clustering hierarchy.
 
 ##Constructing Figures
-```{r}
+```{r fig.align='center',fig.cap=capimg}
 par(mar=c(5,4,4,6)+0.1)
 
 plot(thresholdCVRates$cvm,
