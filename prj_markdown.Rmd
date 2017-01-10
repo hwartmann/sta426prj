@@ -32,6 +32,11 @@ hiplot = figs("hiplot")
 figs("img","Estimated Model Error Rate")
 capimg = figs("img")
 
+figs("box1","First 4 stratifying features")
+capbox1 = figs("box1")
+
+figs("box2","pS6 Median Features")
+capbox2 = figs("box2")
 
 tbls("dataspread","Each files was downsampled with 5000 samples for 1000 times. Each time the mean marker intensity for the extracellular markers was calculated. Here we show the mean of 1000 means ± s.d.. Patient 1 has s.d. zero because the files contain less than 5000 events.")
 capdataspread = tbls("dataspread")
@@ -535,7 +540,9 @@ for(i in 1:490) {
 }
 ```
 #BoxPlot for first 4 features
-```{r}
+
+The box plots below show the transformed data scaled between 0 and 4 for all the features.
+```{r fig.align='center',fig.cap=capbox1}
 #Box plot for the first 4 features.
 list_fea <- modelfeatures$cv.min$features[1:159]
 col_med <- colnames(medianFeatures_4)
@@ -561,7 +568,7 @@ for(j in 1:4){
 ```
 
 ##BoxPlot for pS6 features
-```{r}
+```{r fig.align='center',fig.cap=capbox2} 
 #PS6
 value <- vector(mode ="numeric", length=0)
 value[grep("pS6",list_fea)] <- 1
