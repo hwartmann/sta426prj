@@ -448,7 +448,7 @@ plot(thresholdCVRates$cvm,
      xlab="",ylab="",
      type='o',col="red")
 axis(2, col="red", las = 1)
-mtext("Cross Validation Rate",side=2,line=2.5, col='red')
+mtext("Cross Validation Error Rate",side=2,line=2.5, col='red')
 box()
 
 par(new=TRUE)
@@ -460,7 +460,7 @@ plot(thresholdCVRates$fdr,
      xlab="",ylab="",
      type='o',col="blue")
 axis(4, col="blue", las = 1)
-mtext("FDRate",side=4,line=4, col='blue')
+mtext("Feature False Discovery Rate",side=4,line=4, col='blue')
 box()
 
 #arrows(78, thresholdCVRates$fdr[78], 78, thresholdCVRates$fdr[78] + sd(thresholdCVRates$fdr), length = 0.1, col=3, angle=90)
@@ -472,26 +472,119 @@ box()
 par(new=TRUE)
 
 axis(1, at=c(0,20,40,60,80,100),labels=c(10,8,6,4,2,0))
-mtext("Regularization Threshold", side=1, col="green",line=2.5)
+mtext("Regularization Thresholds", side=1, col="green",line=2.5)
 
 axis(3, at=c(1:100),labels=finalModel$model$nonzero)
 mtext("Number of Features", side=3, col="magenta",line=2.5)
 
-abline(v=cvMinima$cv.min.index, col="orange", lty=2)
+for(i in 1:100){
+  if(thresholdCVRates$cvm[i] == 0.1250){
+    abline(v=i, col="orange", lty=2)
+    par(new=TRUE)
+    points(i, thresholdCVRates$cvm[i], axes=FALSE, xlab="",ylab="", col="green")
+    break
+  }
+}
+```
+##Results
+The descriptive cluster features were used to train a nearest shrunken centroid classifier (pamr) of the sample's simulation group (reference or BCR-treated) at a range of regularization thresholds. Cross-validation and permutation tests were used to estimate and plot classification error rates and feature false discovery rates of each model respectively. 
+In order to determine all features that differed between the different sample groups, error plot produced above was used to identify the smallest regularization threshold that produced a model with acceptable cross validation accuracy and an estimated feature FDR of < 1%. Using this, Citrus constrained the final classificaiton model from all sample. From the original set of 490 cluster features, a subset of 159 was chosen as which differed between the two simulation conditions.
 
-#Plotting cvmin
+##Fold Features
+```{r}
+citrus.clusteringfolds = citrus.clusterAndMapFolds(citrus.combinedFCSSet,
+                                                   clusteringColumns,
+                                                   labels, 
+                                                   nFolds = 1)
 
-par(new=TRUE)
-points(cvMinima$cv.min.index, thresholdCVRates$cvm[cvMinima$cv.min.index],
-     axes=FALSE,
-     xlab="",ylab="",
-     col="green")
+citrus.foldFeatureSet = citrus.calculateFoldFeatureSet(citrus.clusteringfolds,citrus.combinedFCSSet)
+
+citrus.regressionResult = citrus.endpointRegress(modelType="pamr",
+                                                 citrus.foldFeatureSet,labels,
+                                                 family="classification")
+
+plot(citrus.regressionResult,
+     outputDirectory = "F:/Academics/Masters/UZH/material-master/Project/08Jan/sta426prj-master/fold_citrus_8jan_op",
+     citrus.clusteringfolds,
+     citrus.foldFeatureSet,
+     citrus.combinedFCSSet)
+```
+##Data Transformation for Box Plot
+```{r}
+#DataTransformation
+
+for(i in 1:490){
+  m <- min(medianFeatures[,i])  
+  for(j in 1:16){
+    c <- 1 - m
+    if(medianFeatures[j,i] < 0){
+      medianFeatures_4[j,i] <- log(medianFeatures_4[j,i] + c)
+      
+    }
+    else
+      medianFeatures_4[j,i] <- medianFeatures_4[j,i]
+  }
+}
+
+
+for(i in 1:490) {
+  maxi <- max(medianFeatures_4[,i])
+  for(j in 1:16){
+    medianFeatures_4[j,i] <- (medianFeatures_4[j,i]/maxi)*4
+    }
+}
+```
+#BoxPlot for first 4 features
+```{r}
+#Box plot for the first 4 features.
+list_fea <- modelfeatures$cv.min$features[1:159]
+col_med <- colnames(medianFeatures_4)
+
+c = vector(mode="integer")
+k <- 1
+for(i in 1:length(list_fea)){
+  for(j in 1:length(col_med)){
+    if(list_fea[i] == col_med[j]){
+      c[k]<-j
+      k<-k+1
+    }
+  }
+}
+
+par(mar=c(2,2,2,2))
+par(mfrow=c(4,1))
+
+for(j in 1:4){
+  boxplot(medianFeatures_4[1:8,c[j]],medianFeatures_4[9:16,c[j]],
+          horizontal = TRUE, names=c('BCR-XL','Ref'), ylim = c(0,4))
+}
 ```
 
+##BoxPlot for pS6 features
 ```{r}
-```
+#PS6
+value <- vector(mode ="numeric", length=0)
+value[grep("pS6",list_fea)] <- 1
+value
 
-```{r}
+d = vector(mode="integer")
+k <- 1
+for(i in 1:length(pS6)){
+  for(j in 1:length(col_med)){
+    if(pS6[i] == col_med[j]){
+      d[k]<-j
+      k<-k+1
+    }
+  }
+}
+
+par(mar=c(2,2,2,2))
+par(mfrow=c(4,1))
+
+for(j in 1:length(d)){
+  boxplot(medianFeatures_4[1:8,d[j]],medianFeatures_4[9:16,d[j]],
+          horizontal = TRUE, names=c('BCR-XL','Ref'), ylim=c(0.0, 4.0))
+}
 ```
 
 ```{r}
